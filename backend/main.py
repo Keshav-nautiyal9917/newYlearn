@@ -1,0 +1,133 @@
+import os
+import httpx
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+from dotenv import load_dotenv
+
+from services.transcript import extract_video_id, get_transcript
+from services.ai_service import generate_notes_and_summary, generate_quiz, grade_quiz
+
+load_dotenv()
+
+app = FastAPI(title="YouTube Learning Assistant API", version="1.0.0")
+
+# Allow frontend to call backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Serve frontend static files
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+
+# ─── Request / Response Models ────────────────────────────────────────────────
+
+class VideoRequest(BaseModel):
+    url: str
+
+class NotesRequest(BaseModel):
+    transcript: str
+    video_title: str = ""
+
+class QuizGenerateRequest(BaseModel):
+    transcript: str
+    num_questions: int = 10
+
+class QuizGradeRequest(BaseModel):
+    questions: list
+    user_answers: dict
+
+
+# ─── Routes ───────────────────────────────────────────────────────────────────
+
+@app.get("/")
+async def root():
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+@app.get("/{page}.html")
+async def serve_page(page: str):
+    path = os.path.join(FRONTEND_DIR, f"{page}.html")
+    if os.path.exists(path):
+        return FileResponse(path)
+    raise HTTPException(status_code=404, detail="Page not found")
+
+
+@app.post("/api/process")
+async def process_video(req: VideoRequest):
+    """Extract video ID and fetch transcript from YouTube."""
+    video_id = extract_video_id(req.url)
+    if not video_id:
+        raise HTTPException(status_code=400, detail="Invalid YouTube URL. Please check and try again.")
+
+    # Fetch video title from oEmbed (no API key needed)
+    title = ""
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={video_id}&format=json",
+                timeout=5,
+            )
+            if r.status_code == 200:
+                title = r.json().get("title", "")
+    except Exception:
+        pass
+
+    try:
+        transcript_data = get_transcript(video_id)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return {
+        "video_id": video_id,
+        "video_title": title,
+        "thumbnail": f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg",
+        "transcript": transcript_data["full_text"],
+        "word_count": transcript_data["word_count"],
+        "duration_seconds": transcript_data["duration_seconds"],
+    }
+
+
+@app.post("/api/notes")
+async def get_notes(req: NotesRequest):
+    """Generate AI notes, summary, and glossary from transcript."""
+    if not req.transcript.strip():
+        raise HTTPException(status_code=400, detail="Transcript is empty.")
+    try:
+        result = generate_notes_and_summary(req.transcript, req.video_title)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI generation failed: {str(e)}")
+
+
+@app.post("/api/quiz/generate")
+async def create_quiz(req: QuizGenerateRequest):
+    """Generate MCQ quiz questions from transcript."""
+    if not req.transcript.strip():
+        raise HTTPException(status_code=400, detail="Transcript is empty.")
+    num_q = max(5, min(req.num_questions, 20))
+    try:
+        questions = generate_quiz(req.transcript, num_q)
+        return {"questions": questions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Quiz generation failed: {str(e)}")
+
+
+@app.post("/api/quiz/grade")
+async def submit_quiz(req: QuizGradeRequest):
+    """Grade submitted quiz answers."""
+    if not req.questions:
+        raise HTTPException(status_code=400, detail="No questions provided.")
+    result = grade_quiz(req.questions, req.user_answers)
+    return result
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

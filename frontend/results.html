@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Results — UGPD Learn</title>
+  <meta name="description" content="Your mock test results with score, grade, and detailed explanations." />
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .results-area {
+      padding: 40px 0 80px;
+    }
+
+    /* Score Hero */
+    .score-hero {
+      text-align: center;
+      padding: 48px 32px;
+      border-radius: var(--radius-xl);
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent-grad);
+      opacity: 0.07;
+    }
+
+    .score-ring {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      margin: 0 auto 28px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .score-ring svg {
+      position: absolute;
+      inset: 0;
+      transform: rotate(-90deg);
+    }
+
+    .score-ring-bg {
+      fill: none;
+      stroke: var(--bg-hover);
+      stroke-width: 10;
+    }
+
+    .score-ring-fill {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 502;
+      stroke-dashoffset: 502;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .score-ring-fill.grade-a {
+      stroke: url(#grad-a);
+    }
+
+    .score-ring-fill.grade-b {
+      stroke: #22c55e;
+    }
+
+    .score-ring-fill.grade-c {
+      stroke: #f59e0b;
+    }
+
+    .score-ring-fill.grade-d {
+      stroke: #f97316;
+    }
+
+    .score-ring-fill.grade-f {
+      stroke: #ef4444;
+    }
+
+    .score-number {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .grade-badge {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 900;
+      margin-bottom: 12px;
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .score-hero h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .score-feedback {
+      color: var(--text-secondary);
+      max-width: 480px;
+      margin: 0 auto;
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-item .val {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .stat-item .lbl {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-item .val.green {
+      color: var(--success);
+    }
+
+    .stat-item .val.red {
+      color: var(--danger);
+    }
+
+    .stat-item .val.yellow {
+      color: var(--warning);
+    }
+
+    /* Action Row */
+    .actions-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    /* Review */
+    .review-header {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .review-item {
+      padding: 24px 28px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px;
+      border: 1.5px solid var(--border);
+      background: rgba(17, 29, 53, 0.5);
+      transition: var(--transition);
+    }
+
+    .review-item.correct {
+      border-color: rgba(34, 197, 94, 0.35);
+      background: rgba(34, 197, 94, 0.05);
+    }
+
+    .review-item.incorrect {
+      border-color: rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    .review-item.skipped {
+      border-color: rgba(245, 158, 11, 0.35);
+      background: rgba(245, 158, 11, 0.05);
+    }
+
+    .review-q-num {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 8px;
+    }
+
+    .review-item.correct .review-q-num {
+      color: var(--success);
+    }
+
+    .review-item.incorrect .review-q-num {
+      color: var(--danger);
+    }
+
+    .review-item.skipped .review-q-num {
+      color: var(--warning);
+    }
+
+    .review-question {
+      font-weight: 600;
+      font-size: 0.97rem;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .answer-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .answer-pill {
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .answer-pill.user-correct {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: var(--success);
+    }
+
+    .answer-pill.user-wrong {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--danger);
+      text-decoration: line-through;
+    }
+
+    .answer-pill.correct-ans {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      color: var(--success);
+    }
+
+    .answer-pill.skipped-pill {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--warning);
+    }
+
+    .explanation {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      border-left: 3px solid rgba(108, 99, 255, 0.4);
+      line-height: 1.65;
+    }
+
+    .explanation strong {
+      color: var(--accent-2);
+    }
+
+    /* Confetti particles */
+    .confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-orbs"></div>
+  <canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/" class="navbar-brand">
+        <div class="logo-icon">🎓</div>
+        YLearn
+      </a>
+      <div class="navbar-steps">
+        <a href="/" class="step-pill done">① Input</a>
+        <a href="/notes.html" class="step-pill done">② Notes</a>
+        <a href="/quiz.html" class="step-pill done">③ Quiz</a>
+        <span class="step-pill active">④ Results</span>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-wrapper results-area">
+
+      <!-- Score Hero -->
+      <div class="glass-card score-hero" id="score-hero">
+        <div class="score-ring">
+          <svg viewBox="0 0 180 180">
+            <defs>
+              <linearGradient id="grad-a" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6c63ff" />
+                <stop offset="100%" stop-color="#38bdf8" />
+              </linearGradient>
+            </defs>
+            <circle class="score-ring-bg" cx="90" cy="90" r="80" />
+            <circle class="score-ring-fill" id="ring-fill" cx="90" cy="90" r="80" />
+          </svg>
+          <div>
+            <div class="score-number" id="score-num">—</div>
+            <div class="score-label" id="score-denom">out of —</div>
+          </div>
+        </div>
+        <div class="grade-badge" id="grade-display">—</div>
+        <h2 id="result-heading">Processing your results…</h2>
+        <p class="score-feedback" id="result-feedback"></p>
+        <div class="stats-row">
+          <div class="stat-item">
+            <div class="val green" id="stat-correct">—</div>
+            <div class="lbl">Correct</div>
+          </div>
+          <div class="stat-item">
+            <div class="val red" id="stat-wrong">—</div>
+            <div class="lbl">Wrong</div>
+          </div>
+          <div class="stat-item">
+            <div class="val yellow" id="stat-skipped">—</div>
+            <div class="lbl">Skipped</div>
+          </div>
+          <div class="stat-item">
+            <div class="val" id="stat-pct" style="color:var(--accent-2)">—</div>
+            <div class="lbl">Score %</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-row">
+        <button class="btn btn-primary btn-lg" onclick="retakeQuiz()">🔄 Retake Quiz</button>
+        <button class="btn btn-outline btn-lg" onclick="window.location.href='/notes.html'">📝 Review Notes</button>
+        <button class="btn btn-outline btn-lg" onclick="window.location.href='/'">🎬 New Video</button>
+      </div>
+
+      <!-- Detailed Review -->
+      <div class="review-header">
+        <div class="icon"
+          style="width:36px;height:36px;background:var(--accent-grad);border-radius:10px;display:flex;align-items:center;justify-content:center">
+          📋</div>
+        Detailed Review
+      </div>
+      <div id="review-list"></div>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toasts"></div>
+  <script src="/static/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const state = getState();
+      if (!state.quiz_result) { window.location.href = '/quiz.html'; return; }
+      renderResults(state.quiz_result);
+    });
+
+    function renderResults(result) {
+      const { score, total, percentage, grade, feedback, results } = result;
+
+      // Score ring animation
+      const offset = 502 - (502 * percentage / 100);
+      const ring = document.getElementById('ring-fill');
+      setTimeout(() => { ring.style.strokeDashoffset = offset; }, 200);
+
+      // Grade class
+      const gradeClass = percentage >= 80 ? 'grade-a' :
+        percentage >= 70 ? 'grade-b' :
+          percentage >= 60 ? 'grade-c' :
+            percentage >= 50 ? 'grade-d' : 'grade-f';
+      ring.classList.add(gradeClass);
+
+      document.getElementById('score-num').textContent = score;
+      document.getElementById('score-denom').textContent = `out of ${total}`;
+      document.getElementById('grade-display').textContent = grade;
+      document.getElementById('result-heading').textContent =
+        percentage >= 80 ? '🎉 Excellent Performance!' :
+          percentage >= 60 ? '👍 Good Effort!' : '💪 Keep Practicing!';
+      document.getElementById('result-feedback').textContent = feedback;
+
+      const correct = results.filter(r => r.is_correct).length;
+      const skipped = results.filter(r => r.user_answer === null).length;
+      const wrong = total - correct - skipped;
+
+      document.getElementById('stat-correct').textContent = correct;
+      document.getElementById('stat-wrong').textContent = wrong;
+      document.getElementById('stat-skipped').textContent = skipped;
+      document.getElementById('stat-pct').textContent = percentage + '%';
+
+      // Confetti for good scores
+      if (percentage >= 70) launchConfetti();
+
+      // Review list
+      const list = document.getElementById('review-list');
+      list.innerHTML = results.map((r, i) => {
+        const isSkipped = r.user_answer === null;
+        const cls = isSkipped ? 'skipped' : r.is_correct ? 'correct' : 'incorrect';
+        const icon = isSkipped ? '⏭️' : r.is_correct ? '✅' : '❌';
+
+        const userPillHtml = isSkipped
+          ? `<span class="answer-pill skipped-pill">⏭ Skipped</span>`
+          : r.is_correct
+            ? `<span class="answer-pill user-correct">Your answer: ${r.user_answer} — ${escapeHtml(r.options[r.user_answer] || '')}</span>`
+            : `<span class="answer-pill user-wrong">Your answer: ${r.user_answer} — ${escapeHtml(r.options[r.user_answer] || '')}</span>
+               <span class="answer-pill correct-ans">✓ Correct: ${r.correct_answer} — ${escapeHtml(r.options[r.correct_answer] || '')}</span>`;
+
+        return `
+          <div class="review-item ${cls}">
+            <div class="review-q-num">${icon} Question ${i + 1}</div>
+            <div class="review-question">${escapeHtml(r.question)}</div>
+            <div class="answer-pills">${userPillHtml}</div>
+            ${r.explanation ? `<div class="explanation"><strong>💡 Explanation:</strong> ${escapeHtml(r.explanation)}</div>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    function retakeQuiz() {
+      const state = getState();
+      saveState({ quiz_result: null }); // Clear only result, keep questions
+      window.location.href = '/quiz.html';
+    }
+
+    // ─── Simple confetti ─────────────────────────────────────
+    function launchConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const colors = ['#6c63ff', '#a78bfa', '#38bdf8', '#22c55e', '#f59e0b', '#ec4899'];
+      const particles = Array.from({ length: 120 }, () => ({
+        x: Math.random() * canvas.width,
+        y: -10,
+        r: Math.random() * 6 + 3,
+        d: Math.random() * 4 + 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        tilt: Math.random() * 10 - 5,
+        tiltSpeed: Math.random() * 0.1 + 0.05,
+        angle: 0,
+      }));
+
+      let frames = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.angle += p.tiltSpeed;
+          p.tilt = Math.sin(p.angle) * 15;
+          p.y += p.d;
+          p.x += Math.sin(p.angle) * 1.5;
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + p.r / 4, p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 4);
+          ctx.stroke();
+        });
+        frames++;
+        if (frames < 200) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      draw();
+    }
+  </script>
+</body>
+
+</html>

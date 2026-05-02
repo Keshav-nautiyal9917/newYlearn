@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock Test — UGPD Learn</title>
+  <meta name="description" content="Take an AI-generated mock test based on your YouTube video." />
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .quiz-area {
+      padding: 40px 0 80px;
+    }
+
+    /* Header */
+    .quiz-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .quiz-header h1 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+
+    .quiz-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Timer */
+    #timer {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 99px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #timer.urgent {
+      animation: timerPulse 0.8s infinite;
+    }
+
+    @keyframes timerPulse {
+
+      0%,
+      100% {
+        background: rgba(239, 68, 68, 0.12)
+      }
+
+      50% {
+        background: rgba(239, 68, 68, 0.3)
+      }
+    }
+
+    /* Progress */
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .progress-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    /* Question Card */
+    .question-card {
+      padding: 36px;
+      border-radius: var(--radius-xl);
+      margin-bottom: 24px;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.35s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .q-number {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-2);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+    }
+
+    .q-text {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1.5;
+      margin-bottom: 30px;
+      flex: 1;
+    }
+
+    /* Options */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media(max-width:600px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .option-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      background: rgba(17, 29, 53, 0.5);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-align: left;
+      transition: var(--transition);
+      font-family: var(--font-main);
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--accent-1);
+      background: rgba(108, 99, 255, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .option-btn .opt-letter {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(108, 99, 255, 0.15);
+      border: 1.5px solid rgba(108, 99, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      color: var(--accent-2);
+      transition: var(--transition);
+    }
+
+    .option-btn.selected {
+      border-color: var(--accent-1);
+      background: rgba(108, 99, 255, 0.18);
+    }
+
+    .option-btn.selected .opt-letter {
+      background: var(--accent-1);
+      color: white;
+      border-color: var(--accent-1);
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    /* Nav Buttons */
+    .quiz-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Question Dots */
+    .q-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .q-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg-hover);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-muted);
+    }
+
+    .q-dot.answered {
+      background: rgba(108, 99, 255, 0.3);
+      border-color: var(--accent-1);
+      color: white;
+    }
+
+    .q-dot.current {
+      background: var(--accent-1);
+      border-color: var(--accent-1);
+      color: white;
+      box-shadow: 0 0 12px rgba(108, 99, 255, 0.5);
+    }
+
+    .q-dot:hover {
+      border-color: var(--accent-2);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-orbs"></div>
+
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/" class="navbar-brand">
+        <div class="logo-icon">🎓</div>
+        YLearn
+      </a>
+      <div class="navbar-steps">
+        <a href="/" class="step-pill done">① Input</a>
+        <a href="/notes.html" class="step-pill done">② Notes</a>
+        <span class="step-pill active">③ Quiz</span>
+        <span class="step-pill">④ Results</span>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-wrapper quiz-area">
+
+      <!-- Header Row -->
+      <div class="quiz-header">
+        <div>
+          <h1>🧠 Mock <span class="text-gradient">Test</span></h1>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:4px;" id="video-title-small"></p>
+        </div>
+        <div class="quiz-meta">
+          <div id="timer">⏱ 20:00</div>
+          <span class="badge badge-purple" id="score-badge">0 / 0</span>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-row">
+        <div class="progress-bar-track" style="flex:1">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <span class="progress-label" id="progress-label">Q 0 / 0</span>
+      </div>
+
+      <!-- Question dots -->
+      <div class="q-dots" id="q-dots"></div>
+
+      <!-- Question card -->
+      <div class="glass-card question-card" id="question-card">
+        <div style="display:flex;align-items:center;justify-content:center;flex:1;gap:16px;flex-direction:column">
+          <div class="spinner"></div>
+          <p style="color:var(--text-secondary)">Generating your quiz questions…</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="quiz-nav">
+        <button class="btn btn-outline" id="prev-btn" onclick="prevQuestion()" disabled>← Previous</button>
+        <button class="btn btn-outline" id="skip-btn" onclick="nextQuestion()">Skip →</button>
+        <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()">Next →</button>
+        <button class="btn btn-success btn-lg" id="submit-btn" style="display:none" onclick="submitQuiz()">
+          ✅ Submit Quiz
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <p id="loading-msg">Generating quiz questions…</p>
+  </div>
+  <div class="toast-container" id="toasts"></div>
+
+  <script src="/static/app.js"></script>
+  <script>
+    let questions = [];
+    let userAnswers = {};
+    let currentQ = 0;
+    let timerInterval = null;
+    let secondsLeft = 20 * 60;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const state = getState();
+      if (!state.transcript) { window.location.href = '/'; return; }
+      document.getElementById('video-title-small').textContent = state.video_title || '';
+
+      if (state.quiz_questions && state.quiz_questions.length) {
+        questions = state.quiz_questions;
+        renderQuiz();
+      } else {
+        fetchQuiz(state.transcript);
+      }
+    });
+
+    async function fetchQuiz(transcript) {
+      showLoading('Generating 10 quiz questions…');
+      try {
+        const res = await fetch('/api/quiz/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript, num_questions: 10 }),
+        });
+        if (!res.ok) throw new Error((await res.json()).detail);
+        const data = await res.json();
+        questions = data.questions;
+        saveState({ quiz_questions: questions });
+        renderQuiz();
+      } catch (e) {
+        showToast('error', '❌ ' + e.message);
+        document.getElementById('question-card').innerHTML = `
+          <div style="text-align:center;padding:40px">
+            <p style="font-size:2rem">⚠️</p>
+            <p style="color:var(--danger);margin-top:12px">${e.message}</p>
+            <button class="btn btn-outline mt-24" onclick="window.location.href='/notes.html'">← Back to Notes</button>
+          </div>`;
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderQuiz() {
+      buildDots();
+      startTimer();
+      showQuestion(0);
+    }
+
+    function buildDots() {
+      const container = document.getElementById('q-dots');
+      container.innerHTML = questions.map((_, i) => `
+        <div class="q-dot ${i === 0 ? 'current' : ''}" id="dot-${i}" onclick="jumpTo(${i})">${i + 1}</div>
+      `).join('');
+    }
+
+    function updateDots() {
+      questions.forEach((_, i) => {
+        const dot = document.getElementById('dot-' + i);
+        dot.classList.remove('current', 'answered');
+        if (i === currentQ) dot.classList.add('current');
+        else if (userAnswers[i] !== undefined) dot.classList.add('answered');
+      });
+    }
+
+    function showQuestion(idx) {
+      currentQ = idx;
+      const q = questions[idx];
+      const total = questions.length;
+
+      updateDots();
+
+      // Progress
+      document.getElementById('progress-fill').style.width = ((idx + 1) / total * 100) + '%';
+      document.getElementById('progress-label').textContent = `Q ${idx + 1} / ${total}`;
+      document.getElementById('score-badge').textContent =
+        `${Object.keys(userAnswers).length} / ${total} answered`;
+
+      // Nav buttons
+      document.getElementById('prev-btn').disabled = idx === 0;
+      const isLast = idx === total - 1;
+      document.getElementById('next-btn').style.display = isLast ? 'none' : 'inline-flex';
+      document.getElementById('skip-btn').style.display = isLast ? 'none' : 'inline-flex';
+      document.getElementById('submit-btn').style.display = isLast ? 'inline-flex' : 'none';
+
+      // Render question
+      const selectedAns = userAnswers[idx];
+      const optionsHtml = Object.entries(q.options).map(([key, val]) => `
+        <button class="option-btn ${selectedAns === key ? 'selected' : ''}"
+          id="opt-${key}" onclick="selectAnswer('${key}')">
+          <div class="opt-letter">${key}</div>
+          <span>${escapeHtml(val)}</span>
+        </button>
+      `).join('');
+
+      document.getElementById('question-card').innerHTML = `
+        <div class="q-number">Question ${idx + 1} of ${total}</div>
+        <div class="q-text">${escapeHtml(q.question)}</div>
+        <div class="options-grid">${optionsHtml}</div>
+      `;
+    }
+
+    function selectAnswer(key) {
+      userAnswers[currentQ] = key;
+      updateDots();
+      document.getElementById('score-badge').textContent =
+        `${Object.keys(userAnswers).length} / ${questions.length} answered`;
+      // Re-render options highlight
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        const letter = btn.querySelector('.opt-letter').textContent;
+        if (letter === key) btn.classList.add('selected');
+      });
+    }
+
+    function nextQuestion() {
+      if (currentQ < questions.length - 1) showQuestion(currentQ + 1);
+    }
+    function prevQuestion() {
+      if (currentQ > 0) showQuestion(currentQ - 1);
+    }
+    function jumpTo(idx) { showQuestion(idx); }
+
+    async function submitQuiz() {
+      const answered = Object.keys(userAnswers).length;
+      const total = questions.length;
+      if (answered < total) {
+        const go = confirm(`You've answered ${answered} of ${total} questions. Submit anyway?`);
+        if (!go) return;
+      }
+      clearInterval(timerInterval);
+      showLoading('Grading your answers…');
+      try {
+        // Map index-based answers to question id
+        const idAnswers = {};
+        questions.forEach((q, i) => { idAnswers[String(q.id)] = userAnswers[i] || null; });
+
+        const res = await fetch('/api/quiz/grade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questions, user_answers: idAnswers }),
+        });
+        if (!res.ok) throw new Error((await res.json()).detail);
+        const result = await res.json();
+        saveState({ quiz_result: result });
+        window.location.href = '/results.html';
+      } catch (e) {
+        showToast('error', '❌ ' + e.message);
+        hideLoading();
+      }
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        secondsLeft--;
+        const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+        const s = (secondsLeft % 60).toString().padStart(2, '0');
+        const el = document.getElementById('timer');
+        el.textContent = `⏱ ${m}:${s}`;
+        if (secondsLeft <= 60) el.classList.add('urgent');
+        if (secondsLeft <= 0) {
+          clearInterval(timerInterval);
+          showToast('info', '⏰ Time is up! Submitting your quiz…');
+          setTimeout(() => submitQuiz(), 1500);
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+
+</html>

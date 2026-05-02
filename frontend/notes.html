@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notes & Summary — UGPD Learn</title>
+  <meta name="description" content="AI-generated notes, summary and glossary from your YouTube video." />
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .content-area {
+      padding: 40px 0 80px;
+    }
+
+    /* Video Info Banner */
+    .video-banner {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      border-radius: var(--radius-lg);
+      background: rgba(17, 29, 53, 0.6);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      flex-wrap: wrap;
+    }
+
+    .video-banner img {
+      width: 140px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+    }
+
+    .video-banner-info {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .video-banner-info h2 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .video-banner-info .meta-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .video-banner-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Tabs */
+    .tabs-row {
+      margin-bottom: 28px;
+    }
+
+    /* Summary */
+    .summary-text {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.85;
+    }
+
+    .summary-text p {
+      margin-bottom: 16px;
+    }
+
+    /* Notes */
+    .notes-section {
+      margin-bottom: 32px;
+    }
+
+    .notes-topic {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent-2);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notes-topic::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: var(--accent-grad);
+      border-radius: 2px;
+    }
+
+    .notes-list {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .notes-list li {
+      padding: 10px 16px;
+      background: rgba(108, 99, 255, 0.06);
+      border-left: 3px solid rgba(108, 99, 255, 0.4);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .notes-list li:hover {
+      background: rgba(108, 99, 255, 0.12);
+      color: var(--text-primary);
+    }
+
+    /* Glossary */
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .glossary-card {
+      padding: 18px 20px;
+      border-radius: var(--radius-md);
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      transition: var(--transition);
+    }
+
+    .glossary-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .glossary-term {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-3);
+      margin-bottom: 8px;
+    }
+
+    .glossary-def {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Actions footer */
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+
+    /* Skeleton loading */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+      background-size: 400% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 100% 0
+      }
+
+      100% {
+        background-position: -100% 0
+      }
+    }
+
+    .skel-line {
+      height: 16px;
+      margin-bottom: 10px;
+    }
+
+    .skel-line.w-full {
+      width: 100%;
+    }
+
+    .skel-line.w-3q {
+      width: 75%;
+    }
+
+    .skel-line.w-half {
+      width: 50%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-orbs"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/" class="navbar-brand">
+        <div class="logo-icon">🎓</div>
+        YLearn
+      </a>
+      <div class="navbar-steps">
+        <a href="/" class="step-pill done">① Input</a>
+        <span class="step-pill active">② Notes</span>
+        <span class="step-pill" id="nav-quiz">③ Quiz</span>
+        <span class="step-pill">④ Results</span>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-wrapper content-area">
+
+      <!-- Video Banner -->
+      <div class="video-banner" id="video-banner">
+        <img id="thumb-img" src="" alt="thumbnail" />
+        <div class="video-banner-info">
+          <h2 id="video-title">Loading video…</h2>
+          <div class="meta-tags" id="meta-tags"></div>
+        </div>
+        <div class="video-banner-actions">
+          <a id="yt-link" href="#" target="_blank" class="btn btn-outline" style="padding:10px 18px;font-size:0.85rem;">
+            ▶ Watch on YouTube
+          </a>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-row">
+        <div class="tabs" role="tablist">
+          <button class="tab-btn active" onclick="switchTab('summary')" id="tab-summary">📄 Summary</button>
+          <button class="tab-btn" onclick="switchTab('notes')" id="tab-notes">📝 Notes</button>
+          <button class="tab-btn" onclick="switchTab('glossary')" id="tab-glossary">📚 Glossary</button>
+        </div>
+      </div>
+
+      <!-- Summary Panel -->
+      <div class="tab-panel active glass-card" id="panel-summary" style="padding:28px 32px;">
+        <div class="section-title">
+          <div class="icon">📄</div>
+          Video Summary
+        </div>
+        <div id="summary-content">
+          <div class="skeleton skel-line w-full"></div>
+          <div class="skeleton skel-line w-full"></div>
+          <div class="skeleton skel-line w-3q"></div>
+          <div class="skeleton skel-line w-full mt-16"></div>
+          <div class="skeleton skel-line w-half"></div>
+        </div>
+      </div>
+
+      <!-- Notes Panel -->
+      <div class="tab-panel glass-card" id="panel-notes" style="padding:28px 32px;">
+        <div class="section-title">
+          <div class="icon">📝</div>
+          Key Notes
+        </div>
+        <div id="notes-content">
+          <div class="skeleton skel-line w-3q"></div>
+          <div class="skeleton skel-line w-full mt-8"></div>
+          <div class="skeleton skel-line w-full mt-8"></div>
+          <div class="skeleton skel-line w-half mt-8"></div>
+        </div>
+      </div>
+
+      <!-- Glossary Panel -->
+      <div class="tab-panel glass-card" id="panel-glossary" style="padding:28px 32px;">
+        <div class="section-title">
+          <div class="icon">📚</div>
+          Key Terms & Glossary
+        </div>
+        <div id="glossary-content">
+          <div class="glossary-grid">
+            <div class="skeleton" style="height:80px;border-radius:var(--radius-md)"></div>
+            <div class="skeleton" style="height:80px;border-radius:var(--radius-md)"></div>
+            <div class="skeleton" style="height:80px;border-radius:var(--radius-md)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Row -->
+      <div class="actions-row">
+        <button class="btn btn-primary btn-lg" onclick="goToQuiz()">
+          🧠 Take Mock Test →
+        </button>
+        <button class="btn btn-outline" onclick="window.location.href='/'">
+          ← Try Another Video
+        </button>
+        <button class="btn btn-outline" onclick="printNotes()" style="margin-left:auto">
+          🖨️ Print / Save
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <p id="loading-msg">Generating notes with AI…</p>
+  </div>
+  <div class="toast-container" id="toasts"></div>
+
+  <script src="/static/app.js"></script>
+  <script>
+    function switchTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      document.getElementById('panel-' + name).classList.add('active');
+    }
+    function printNotes() { window.print(); }
+
+    // Initialise page
+    document.addEventListener('DOMContentLoaded', () => {
+      const state = getState();
+      if (!state.transcript) { window.location.href = '/'; return; }
+
+      // Fill banner
+      const vid = state.video_id;
+      document.getElementById('thumb-img').src = state.thumbnail || `https://img.youtube.com/vi/${vid}/mqdefault.jpg`;
+      document.getElementById('video-title').textContent = state.video_title || 'YouTube Video';
+      document.getElementById('yt-link').href = `https://www.youtube.com/watch?v=${vid}`;
+
+      const tags = document.getElementById('meta-tags');
+      tags.innerHTML = `
+        <span class="badge badge-purple">📝 ${state.word_count?.toLocaleString() || '—'} words</span>
+        <span class="badge badge-blue">⏱ ${fmtDur(state.duration_seconds)}</span>
+        <span class="badge badge-green">✅ Transcript ready</span>
+      `;
+
+      if (state.notes_data) {
+        renderNotes(state.notes_data);
+      } else {
+        fetchNotes(state.transcript, state.video_title);
+      }
+    });
+
+    async function fetchNotes(transcript, title) {
+      showLoading('Generating notes and summary with AI…');
+      try {
+        const res = await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript, video_title: title }),
+        });
+        if (!res.ok) throw new Error((await res.json()).detail);
+        const data = await res.json();
+        saveState({ notes_data: data });
+        renderNotes(data);
+      } catch (e) {
+        showToast('error', '❌ ' + e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderNotes(data) {
+      // Summary
+      const sumEl = document.getElementById('summary-content');
+      sumEl.innerHTML = data.summary
+        ? data.summary.split('\n').filter(Boolean).map(p => `<p class="summary-text">${p}</p>`).join('')
+        : '<p class="summary-text" style="color:var(--text-muted)">No summary available.</p>';
+
+      // Notes
+      const notesEl = document.getElementById('notes-content');
+      if (data.notes && data.notes.length) {
+        notesEl.innerHTML = data.notes.map(section => `
+          <div class="notes-section">
+            <div class="notes-topic">${escapeHtml(section.topic)}</div>
+            <ul class="notes-list">
+              ${(section.points || []).map(p => `<li>${escapeHtml(p)}</li>`).join('')}
+            </ul>
+          </div>
+        `).join('');
+      } else {
+        notesEl.innerHTML = '<p style="color:var(--text-muted)">No notes generated.</p>';
+      }
+
+      // Glossary
+      const glossEl = document.getElementById('glossary-content');
+      if (data.glossary && data.glossary.length) {
+        glossEl.innerHTML = `<div class="glossary-grid">
+          ${data.glossary.map(g => `
+            <div class="glossary-card">
+              <div class="glossary-term">${escapeHtml(g.term)}</div>
+              <div class="glossary-def">${escapeHtml(g.definition)}</div>
+            </div>
+          `).join('')}
+        </div>`;
+      } else {
+        glossEl.innerHTML = '<p style="color:var(--text-muted)">No glossary generated.</p>';
+      }
+    }
+  </script>
+</body>
+
+</html>
