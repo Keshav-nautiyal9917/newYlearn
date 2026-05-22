@@ -2,7 +2,7 @@
    app.js  —  Shared frontend logic for YLearn
    ============================================================ */
 
-const API_BASE = 'https://ylearnai-backend.onrender.com';  // Render.com backend
+const API_BASE = '';  // Netlify proxies /api/* → Render backend (no CORS needed)
 
 // ─── State Management (sessionStorage) ───────────────────────────────────────
 

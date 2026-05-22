@@ -1,6 +1,14 @@
 [build]
   publish = "frontend"
 
+# Proxy all /api/* calls to the Render backend (eliminates CORS entirely)
+[[redirects]]
+  from = "/api/*"
+  to = "https://ylearnai-backend.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Fallback: serve index.html for all other routes (SPA routing)
 [[redirects]]
   from = "/*"
   to = "/index.html"
