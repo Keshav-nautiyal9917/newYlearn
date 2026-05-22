@@ -147,10 +147,15 @@ async def chat_video(req: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI chat failed: {str(e)}")
 
-@app.get("/")
-async def root():
-    """Health check endpoint for Render ping."""
-    return {"status": "ok", "message": "Backend is running!"}
+# Serve the frontend statically from the backend (Bypassing Netlify)
+import os
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+else:
+    @app.get("/")
+    async def root():
+        return {"status": "ok", "message": "Backend is running, but frontend folder not found."}
 
 
 if __name__ == "__main__":
