@@ -67,7 +67,15 @@ async function fetchAndRenderNotes(transcript, title) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ transcript, video_title: title }),
     });
-    if (!res.ok) throw new Error((await res.json()).detail || 'AI generation failed.');
+    if (!res.ok) {
+      let errorMsg = 'AI generation failed.';
+      try {
+        errorMsg = (await res.json()).detail || errorMsg;
+      } catch (err) {
+        if (res.status === 504 || res.status === 502) errorMsg = 'The AI server is waking up. Please try again.';
+      }
+      throw new Error(errorMsg);
+    }
     const data = await res.json();
     saveState({ notes_data: data });
     renderDashboardNotes(data);
@@ -182,8 +190,13 @@ async function sendChatMessage() {
     removeTypingIndicator(typingId);
 
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || 'AI chat failed.');
+      let errorMsg = 'AI chat failed.';
+      try {
+        errorMsg = (await res.json()).detail || errorMsg;
+      } catch (err) {
+        if (res.status === 504 || res.status === 502) errorMsg = 'The AI server is waking up. Please try again.';
+      }
+      throw new Error(errorMsg);
     }
 
     const data = await res.json();

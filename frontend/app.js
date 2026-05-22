@@ -112,8 +112,22 @@ async function processVideo() {
       body: JSON.stringify({ url }),
     });
 
+    if (!res.ok) {
+      let errorMsg = 'Failed to process video.';
+      try {
+        const errorData = await res.json();
+        errorMsg = errorData.detail || errorMsg;
+      } catch (e) {
+        if (res.status === 504 || res.status === 502) {
+          errorMsg = 'The AI server is waking up from sleep. Please wait 30 seconds and try again.';
+        } else {
+          errorMsg = `Server error (${res.status}). Please try again.`;
+        }
+      }
+      throw new Error(errorMsg);
+    }
+
     const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Failed to process video.');
 
     // Persist to session state
     saveState({

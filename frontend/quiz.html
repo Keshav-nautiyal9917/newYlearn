@@ -338,7 +338,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transcript, num_questions: 10 }),
         });
-        if (!res.ok) throw new Error((await res.json()).detail);
+        if (!res.ok) {
+          let errorMsg = 'Failed to generate quiz.';
+          try {
+            errorMsg = (await res.json()).detail || errorMsg;
+          } catch (err) {
+            if (res.status === 504 || res.status === 502) errorMsg = 'The AI server is waking up. Please try again.';
+          }
+          throw new Error(errorMsg);
+        }
         const data = await res.json();
         questions = data.questions;
         saveState({ quiz_questions: questions });
@@ -455,7 +463,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ questions, user_answers: idAnswers }),
         });
-        if (!res.ok) throw new Error((await res.json()).detail);
+        if (!res.ok) {
+          let errorMsg = 'Failed to grade quiz.';
+          try {
+            errorMsg = (await res.json()).detail || errorMsg;
+          } catch (err) {
+            if (res.status === 504 || res.status === 502) errorMsg = 'The AI server is waking up. Please try again.';
+          }
+          throw new Error(errorMsg);
+        }
         const result = await res.json();
         saveState({ quiz_result: result });
         window.location.href = './results.html';
