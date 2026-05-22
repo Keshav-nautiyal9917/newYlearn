@@ -4,7 +4,7 @@
 # Proxy all /api/* calls to the Render backend (eliminates CORS entirely)
 [[redirects]]
   from = "/api/*"
-  to = "https://ylearnai-backend.onrender.com/api/:splat"
+  to = "https://majorproject-backend.onrender.com/api/:splat"
   status = 200
   force = true
 
