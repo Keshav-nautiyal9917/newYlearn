@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YLearn — AI YouTube Learning Assistant</title>
   <meta name="description" content="Transform any YouTube video into smart notes, summaries, and mock tests with AI." />
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="./style.css" />
   <style>
     .hero {
       min-height: calc(100vh - 73px);
@@ -208,9 +208,9 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="navbar-inner">
-      <a href="/" class="navbar-brand">
+      <a href="./index.html" class="navbar-brand">
         <div class="logo-icon">🎓</div>
-        UGPD Learn
+        YLearn
       </a>
       <div class="navbar-steps">
         <span class="step-pill active">① Input</span>
@@ -265,7 +265,7 @@
             </div>
           </div>
           <div style="padding:0 20px 20px; display:flex; gap:10px;">
-            <button class="btn btn-primary" style="flex:1" onclick="goToNotes()">📝 Get Notes & Summary</button>
+            <button class="btn btn-primary" style="flex:1" onclick="goToDashboard()">📊 Open Dashboard</button>
             <button class="btn btn-outline" style="flex:1" onclick="goToQuiz()">🧠 Take Quiz Directly</button>
           </div>
         </div>
@@ -301,7 +301,7 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toasts"></div>
 
-  <script src="/static/app.js"></script>
+  <script src="./app.js"></script>
   <script>
     function loadExample() {
       document.getElementById('youtube-url').value =

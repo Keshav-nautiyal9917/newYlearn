@@ -2,7 +2,7 @@
    app.js  —  Shared frontend logic for YLearn
    ============================================================ */
 
-const API_BASE = '';   // Same-origin: requests go to FastAPI backend
+const API_BASE = 'https://ylearnai-backend.onrender.com';  // Render.com backend
 
 // ─── State Management (sessionStorage) ───────────────────────────────────────
 
@@ -77,11 +77,15 @@ function fmtDur(seconds) {
 // ─── Navigation helpers ───────────────────────────────────────────────────────
 
 function goToNotes() {
-  window.location.href = '/notes.html';
+  window.location.href = './dashboard.html';
+}
+
+function goToDashboard() {
+  window.location.href = './dashboard.html';
 }
 
 function goToQuiz() {
-  window.location.href = '/quiz.html';
+  window.location.href = './quiz.html';
 }
 
 // ─── Home Page: Process Video ─────────────────────────────────────────────────

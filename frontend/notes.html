@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Notes & Summary — UGPD Learn</title>
   <meta name="description" content="AI-generated notes, summary and glossary from your YouTube video." />
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="./style.css" />
   <style>
     .content-area {
       padding: 40px 0 80px;
@@ -206,12 +206,12 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="navbar-inner">
-      <a href="/" class="navbar-brand">
+      <a href="./index.html" class="navbar-brand">
         <div class="logo-icon">🎓</div>
         YLearn
       </a>
       <div class="navbar-steps">
-        <a href="/" class="step-pill done">① Input</a>
+        <a href="./index.html" class="step-pill done">① Input</a>
         <span class="step-pill active">② Notes</span>
         <span class="step-pill" id="nav-quiz">③ Quiz</span>
         <span class="step-pill">④ Results</span>
@@ -294,7 +294,7 @@
         <button class="btn btn-primary btn-lg" onclick="goToQuiz()">
           🧠 Take Mock Test →
         </button>
-        <button class="btn btn-outline" onclick="window.location.href='/'">
+        <button class="btn btn-outline" onclick="window.location.href='./index.html'">
           ← Try Another Video
         </button>
         <button class="btn btn-outline" onclick="printNotes()" style="margin-left:auto">
@@ -310,7 +310,7 @@
   </div>
   <div class="toast-container" id="toasts"></div>
 
-  <script src="/static/app.js"></script>
+  <script src="./app.js"></script>
   <script>
     function switchTab(name) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -323,7 +323,7 @@
     // Initialise page
     document.addEventListener('DOMContentLoaded', () => {
       const state = getState();
-      if (!state.transcript) { window.location.href = '/'; return; }
+      if (!state.transcript) { window.location.href = './index.html'; return; }
 
       // Fill banner
       const vid = state.video_id;
@@ -348,7 +348,7 @@
     async function fetchNotes(transcript, title) {
       showLoading('Generating notes and summary with AI…');
       try {
-        const res = await fetch('/api/notes', {
+        const res = await fetch(`${API_BASE}/api/notes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transcript, video_title: title }),

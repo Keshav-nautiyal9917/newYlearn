@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mock Test — UGPD Learn</title>
   <meta name="description" content="Take an AI-generated mock test based on your YouTube video." />
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="./style.css" />
   <style>
     .quiz-area {
       padding: 40px 0 80px;
@@ -244,13 +244,13 @@
 
   <nav class="navbar">
     <div class="navbar-inner">
-      <a href="/" class="navbar-brand">
+      <a href="./index.html" class="navbar-brand">
         <div class="logo-icon">🎓</div>
         YLearn
       </a>
       <div class="navbar-steps">
-        <a href="/" class="step-pill done">① Input</a>
-        <a href="/notes.html" class="step-pill done">② Notes</a>
+        <a href="./index.html" class="step-pill done">① Input</a>
+        <a href="./notes.html" class="step-pill done">② Notes</a>
         <span class="step-pill active">③ Quiz</span>
         <span class="step-pill">④ Results</span>
       </div>
@@ -309,7 +309,7 @@
   </div>
   <div class="toast-container" id="toasts"></div>
 
-  <script src="/static/app.js"></script>
+  <script src="./app.js"></script>
   <script>
     let questions = [];
     let userAnswers = {};
@@ -319,7 +319,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       const state = getState();
-      if (!state.transcript) { window.location.href = '/'; return; }
+      if (!state.transcript) { window.location.href = './index.html'; return; }
       document.getElementById('video-title-small').textContent = state.video_title || '';
 
       if (state.quiz_questions && state.quiz_questions.length) {
@@ -333,7 +333,7 @@
     async function fetchQuiz(transcript) {
       showLoading('Generating 10 quiz questions…');
       try {
-        const res = await fetch('/api/quiz/generate', {
+        const res = await fetch(`${API_BASE}/api/quiz/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ transcript, num_questions: 10 }),
@@ -349,7 +349,7 @@
           <div style="text-align:center;padding:40px">
             <p style="font-size:2rem">⚠️</p>
             <p style="color:var(--danger);margin-top:12px">${e.message}</p>
-            <button class="btn btn-outline mt-24" onclick="window.location.href='/notes.html'">← Back to Notes</button>
+            <button class="btn btn-outline mt-24" onclick="window.location.href='./notes.html'">← Back to Notes</button>
           </div>`;
       } finally {
         hideLoading();
@@ -450,7 +450,7 @@
         const idAnswers = {};
         questions.forEach((q, i) => { idAnswers[String(q.id)] = userAnswers[i] || null; });
 
-        const res = await fetch('/api/quiz/grade', {
+        const res = await fetch(`${API_BASE}/api/quiz/grade`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ questions, user_answers: idAnswers }),
@@ -458,7 +458,7 @@
         if (!res.ok) throw new Error((await res.json()).detail);
         const result = await res.json();
         saveState({ quiz_result: result });
-        window.location.href = '/results.html';
+        window.location.href = './results.html';
       } catch (e) {
         showToast('error', '❌ ' + e.message);
         hideLoading();

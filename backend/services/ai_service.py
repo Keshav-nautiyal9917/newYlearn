@@ -220,3 +220,32 @@ def grade_quiz(questions: list, user_answers: dict) -> dict:
         "feedback": feedback,
         "results": results,
     }
+
+
+def chat_about_video(transcript: str, question: str, history: list = None) -> str:
+    """Answer a user's question about the video using the transcript and chat history."""
+    if history is None:
+        history = []
+        
+    # Format history into a string
+    history_text = ""
+    for msg in history[-6:]:  # Only keep last 6 messages for context limits
+        role = "User" if msg.get("role") == "user" else "AI"
+        history_text += f"{role}: {msg.get('content')}\n"
+
+    prompt = f"""You are 'YLearn AI', an intelligent tutor helping a student understand a YouTube video.
+Answer the user's question strictly based on the provided transcript. If the answer is not in the transcript, politely state that it wasn't covered in the video.
+
+Transcript:
+{transcript[:12000]}
+
+Recent Conversation History:
+{history_text}
+
+User's Question: {question}
+
+Provide a clear, concise, and helpful response. Do NOT use markdown code blocks or JSON, just return plain text or simple markdown formatting for readability.
+"""
+
+    return _generate_with_fallback(prompt)
+

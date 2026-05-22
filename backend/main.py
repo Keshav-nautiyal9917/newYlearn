@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 from services.transcript import extract_video_id, get_transcript
-from services.ai_service import generate_notes_and_summary, generate_quiz, grade_quiz
+from services.ai_service import generate_notes_and_summary, generate_quiz, grade_quiz, chat_about_video
 
 load_dotenv()
 
@@ -43,6 +43,11 @@ class QuizGenerateRequest(BaseModel):
 class QuizGradeRequest(BaseModel):
     questions: list
     user_answers: dict
+
+class ChatRequest(BaseModel):
+    transcript: str
+    question: str
+    history: list = []
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -126,6 +131,21 @@ async def submit_quiz(req: QuizGradeRequest):
         raise HTTPException(status_code=400, detail="No questions provided.")
     result = grade_quiz(req.questions, req.user_answers)
     return result
+
+
+@app.post("/api/chat")
+async def chat_video(req: ChatRequest):
+    """Chat with AI about the video."""
+    if not req.transcript.strip():
+        raise HTTPException(status_code=400, detail="Transcript is empty.")
+    if not req.question.strip():
+        raise HTTPException(status_code=400, detail="Question is empty.")
+    try:
+        response_text = chat_about_video(req.transcript, req.question, req.history)
+        return {"response": response_text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI chat failed: {str(e)}")
+
 
 
 if __name__ == "__main__":

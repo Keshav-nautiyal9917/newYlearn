@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Results — UGPD Learn</title>
   <meta name="description" content="Your mock test results with score, grade, and detailed explanations." />
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="./style.css" />
   <style>
     .results-area {
       padding: 40px 0 80px;
@@ -298,14 +298,14 @@
 
   <nav class="navbar">
     <div class="navbar-inner">
-      <a href="/" class="navbar-brand">
+      <a href="./index.html" class="navbar-brand">
         <div class="logo-icon">🎓</div>
         YLearn
       </a>
       <div class="navbar-steps">
-        <a href="/" class="step-pill done">① Input</a>
-        <a href="/notes.html" class="step-pill done">② Notes</a>
-        <a href="/quiz.html" class="step-pill done">③ Quiz</a>
+        <a href="./index.html" class="step-pill done">① Input</a>
+        <a href="./notes.html" class="step-pill done">② Notes</a>
+        <a href="./quiz.html" class="step-pill done">③ Quiz</a>
         <span class="step-pill active">④ Results</span>
       </div>
     </div>
@@ -358,8 +358,8 @@
       <!-- Actions -->
       <div class="actions-row">
         <button class="btn btn-primary btn-lg" onclick="retakeQuiz()">🔄 Retake Quiz</button>
-        <button class="btn btn-outline btn-lg" onclick="window.location.href='/notes.html'">📝 Review Notes</button>
-        <button class="btn btn-outline btn-lg" onclick="window.location.href='/'">🎬 New Video</button>
+        <button class="btn btn-outline btn-lg" onclick="window.location.href='./notes.html'">📝 Review Notes</button>
+        <button class="btn btn-outline btn-lg" onclick="window.location.href='./index.html'">🎨 New Video</button>
       </div>
 
       <!-- Detailed Review -->
@@ -374,11 +374,11 @@
   </main>
 
   <div class="toast-container" id="toasts"></div>
-  <script src="/static/app.js"></script>
+  <script src="./app.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const state = getState();
-      if (!state.quiz_result) { window.location.href = '/quiz.html'; return; }
+      if (!state.quiz_result) { window.location.href = './quiz.html'; return; }
       renderResults(state.quiz_result);
     });
 
@@ -444,7 +444,7 @@
     function retakeQuiz() {
       const state = getState();
       saveState({ quiz_result: null }); // Clear only result, keep questions
-      window.location.href = '/quiz.html';
+      window.location.href = './quiz.html';
     }
 
     // ─── Simple confetti ─────────────────────────────────────
