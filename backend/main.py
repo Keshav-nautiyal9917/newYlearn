@@ -147,8 +147,13 @@ async def chat_video(req: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI chat failed: {str(e)}")
 
+@app.get("/")
+async def root():
+    """Health check endpoint for Render ping."""
+    return {"status": "ok", "message": "Backend is running!"}
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
