@@ -8,8 +8,8 @@
 ## Pehle ye ready rakho
 
 1. **Gemini API key** (free): https://aistudio.google.com/app/apikey  
-2. **GitHub account** — repo already hai:  
-   https://github.com/shivanshjoshi9977/majorproject  
+2. **GitHub account** — repo:  
+   https://github.com/Keshav-nautiyal9917/newYlearn  
 3. **Render account** (free): https://dashboard.render.com/register  
 
 ---
@@ -19,7 +19,7 @@
 ### Step 1: Render pe deploy
 
 1. Browser me kholo:  
-   **https://dashboard.render.com/blueprint/new?repo=https://github.com/shivanshjoshi9977/majorproject**
+   **https://dashboard.render.com/blueprint/new?repo=https://github.com/Keshav-nautiyal9917/newYlearn**
 2. **GitHub se sign in** karo aur repo access allow karo.
 3. Blueprint screen pe service dikhegi: `ylearnai-backend` → **Apply**.
 4. **Environment** me `GEMINI_API_KEY` ke saamne **Add value** → apni Gemini key paste karo.
@@ -80,10 +80,22 @@ Netlify site: `https://something.netlify.app` — API `/api/*` se Render pe jaye
 
 | Problem | Solution |
 |--------|----------|
+| Build fail: `pydantic-core` / `maturin` / Rust error | Render **Python 3.14** use kar raha hai. **Environment** → `PYTHON_VERSION` = `3.11.9`, **Root Directory** = `backend`, phir **Clear build cache & deploy**. Ya repo me latest `render.yaml` + `backend/.python-version` pull karo. |
 | "AI generation failed" | Render → Environment → `GEMINI_API_KEY` sahi hai? |
 | Bahut slow pehli request | Render free sleep — dubara try karo |
 | Transcript error | Video me subtitles/captions on karo |
 | Netlify pe API fail | `netlify.toml` me sahi Render URL hai? |
+
+### Manual deploy (Blueprint ke bina)
+
+Agar tumne khud **Web Service** banaya hai, ye settings check karo:
+
+| Setting | Value |
+|--------|--------|
+| Root Directory | `backend` |
+| Build Command | `pip install --upgrade pip && pip install -r requirements.txt` |
+| Start Command | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+| Environment | `PYTHON_VERSION` = `3.11.9`, `GEMINI_API_KEY` = tumhari key |
 
 ---
 
