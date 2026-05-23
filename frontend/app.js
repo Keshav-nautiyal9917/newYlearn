@@ -105,10 +105,32 @@ async function processVideo() {
   clearState();
 
   try {
+    const videoId = typeof extractVideoIdFromUrl === 'function'
+      ? extractVideoIdFromUrl(url)
+      : null;
+
+    let body = { url };
+
+    // On Render, YouTube blocks the server IP — fetch captions in the browser first.
+    if (videoId && typeof fetchTranscriptInBrowser === 'function') {
+      showLoading('Fetching captions (your connection)…');
+      const clientPayload = await fetchTranscriptInBrowser(videoId);
+      if (clientPayload) {
+        body = {
+          url,
+          video_id: videoId,
+          transcript: clientPayload.full_text,
+          word_count: clientPayload.word_count,
+          duration_seconds: clientPayload.duration_seconds,
+        };
+      }
+    }
+
+    showLoading(body.transcript ? 'Saving transcript…' : 'Fetching via server (may take ~30s)…');
     const res = await fetch(`${API_BASE}/api/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {

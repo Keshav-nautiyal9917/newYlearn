@@ -82,6 +82,49 @@ def _generate_with_fallback(prompt: str) -> str:
     )
 
 
+def transcribe_youtube_video(video_id: str) -> str:
+    """
+    Extract spoken transcript via Gemini + public YouTube URL.
+    Used when youtube-transcript-api is blocked (cloud hosting IPs).
+    """
+    youtube_url = f"https://www.youtube.com/watch?v={video_id}"
+    prompt = (
+        "Listen to this YouTube video and write the full spoken transcript in English. "
+        "Return ONLY the transcript text (plain paragraphs). "
+        "No timestamps, bullet points, titles, or commentary."
+    )
+    last_err = None
+    for model_name in _MODEL_PREFERENCE:
+        try:
+            model = _get_model(model_name)
+            response = model.generate_content(
+                [
+                    prompt,
+                    {
+                        "file_data": {
+                            "mime_type": "video/mp4",
+                            "file_uri": youtube_url,
+                        }
+                    },
+                ]
+            )
+            text = (response.text or "").strip()
+            if len(text) >= 80:
+                return text
+        except Exception as e:
+            err_str = str(e)
+            last_err = e
+            if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower():
+                time.sleep(2)
+                continue
+            continue
+    raise ValueError(
+        "Gemini could not read this video. Check GEMINI_API_KEY and quota, "
+        "or use a shorter public video with captions. "
+        f"Details: {last_err}"
+    )
+
+
 # ─── Public Functions ─────────────────────────────────────────────────────────
 
 def generate_notes_and_summary(transcript: str, video_title: str = "") -> dict:

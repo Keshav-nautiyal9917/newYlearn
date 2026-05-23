@@ -31,6 +31,10 @@ app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 class VideoRequest(BaseModel):
     url: str
+    transcript: str | None = None
+    video_id: str | None = None
+    word_count: int | None = None
+    duration_seconds: int | None = None
 
 class NotesRequest(BaseModel):
     transcript: str
@@ -77,10 +81,18 @@ async def process_video(req: VideoRequest):
     except Exception:
         pass
 
-    try:
-        transcript_data = get_transcript(video_id)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+    if req.transcript and req.transcript.strip():
+        full_text = req.transcript.strip()
+        transcript_data = {
+            "full_text": full_text,
+            "word_count": req.word_count or len(full_text.split()),
+            "duration_seconds": req.duration_seconds or 0,
+        }
+    else:
+        try:
+            transcript_data = get_transcript(video_id)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
 
     return {
         "video_id": video_id,

@@ -81,6 +81,7 @@ Netlify site: `https://something.netlify.app` — API `/api/*` se Render pe jaye
 | Problem | Solution |
 |--------|----------|
 | Build fail: `pydantic-core` / `maturin` / Rust error | Render **Python 3.14** use kar raha hai. **Environment** → `PYTHON_VERSION` = `3.11.9`, **Root Directory** = `backend`, phir **Clear build cache & deploy**. Ya repo me latest `render.yaml` + `backend/.python-version` pull karo. |
+| Transcript error: YouTube blocking cloud IP | Render pe normal hai. App pehle **browser** se captions leti hai, phir server **Gemini** se backup. `GEMINI_API_KEY` set karo, refresh karke try karo. Video me captions on honi chahiye. |
 | "AI generation failed" | Render → Environment → `GEMINI_API_KEY` sahi hai? |
 | Bahut slow pehli request | Render free sleep — dubara try karo |
 | Transcript error | Video me subtitles/captions on karo |
