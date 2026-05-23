@@ -4,7 +4,6 @@
 
 const API_BASE = '';  // Netlify proxies /api/* → Render backend (no CORS needed)
 
-// ─── State Management (sessionStorage) ───────────────────────────────────────
 
 function getState() {
   try {
