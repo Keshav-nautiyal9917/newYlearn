@@ -3,7 +3,6 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -53,16 +52,9 @@ class ChatRequest(BaseModel):
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
 
-@app.get("/")
-async def root():
-    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
-
-@app.get("/{page}.html")
-async def serve_page(page: str):
-    path = os.path.join(FRONTEND_DIR, f"{page}.html")
-    if os.path.exists(path):
-        return FileResponse(path)
-    raise HTTPException(status_code=404, detail="Page not found")
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 
 @app.post("/api/process")
@@ -147,11 +139,9 @@ async def chat_video(req: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI chat failed: {str(e)}")
 
-# Serve the frontend statically from the backend (Bypassing Netlify)
-import os
-frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
-if os.path.exists(frontend_path):
-    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+# Serve frontend + API from one host (e.g. Render free tier)
+if os.path.isdir(FRONTEND_DIR):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 else:
     @app.get("/")
     async def root():

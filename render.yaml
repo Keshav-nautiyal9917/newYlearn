@@ -9,4 +9,4 @@ services:
     envVars:
       - key: GEMINI_API_KEY
         sync: false   # Set this manually in the Render dashboard
-    healthCheckPath: /
+    healthCheckPath: /health
