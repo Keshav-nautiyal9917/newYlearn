@@ -109,29 +109,39 @@ async function processVideo() {
       ? extractVideoIdFromUrl(url)
       : null;
 
-    let body = { url };
+    const body = { url };
+    const onCloudHost = /\.onrender\.com$|\.railway\.app$|\.vercel\.app$/i.test(window.location.hostname);
 
-    // On Render, YouTube blocks the server IP — fetch captions in the browser first.
-    if (videoId && typeof fetchTranscriptInBrowser === 'function') {
-      showLoading('Fetching captions (your connection)…');
+    // Local only: try browser captions (skipped on Render — proxies fail with 403/502).
+    if (!onCloudHost && videoId && typeof fetchTranscriptInBrowser === 'function') {
+      showLoading('Fetching captions…');
       const clientPayload = await fetchTranscriptInBrowser(videoId);
       if (clientPayload) {
-        body = {
-          url,
+        Object.assign(body, {
           video_id: videoId,
           transcript: clientPayload.full_text,
           word_count: clientPayload.word_count,
           duration_seconds: clientPayload.duration_seconds,
-        };
+        });
       }
     }
 
-    showLoading(body.transcript ? 'Saving transcript…' : 'Fetching via server (may take ~30s)…');
+    showLoading(
+      body.transcript
+        ? 'Saving transcript…'
+        : 'AI is reading the video (30–90 sec on Render)…'
+    );
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+
     const res = await fetch(`${API_BASE}/api/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       let errorMsg = 'Failed to process video.';
@@ -180,7 +190,10 @@ async function processVideo() {
     showToast('success', '✅ Transcript fetched! Choose an option below.');
 
   } catch (err) {
-    showToast('error', `❌ ${err.message}`);
+    const msg = err.name === 'AbortError'
+      ? 'Request timed out. Try a shorter video or wait and retry.'
+      : err.message;
+    showToast('error', `❌ ${msg}`);
   } finally {
     hideLoading();
     if (btn) { btn.disabled = false; btn.innerHTML = '▶ Analyse Video'; }

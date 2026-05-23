@@ -246,41 +246,49 @@ def _get_transcript_via_gemini(video_id: str) -> dict:
     return _text_to_result(video_id, full_text)
 
 
+def _is_cloud_host() -> bool:
+    """Render/Railway/etc. IPs are blocked by YouTube — use Gemini there."""
+    if os.getenv("TRANSCRIPT_MODE", "").strip().lower() == "gemini":
+        return True
+    return bool(
+        os.getenv("RENDER")
+        or os.getenv("RAILWAY_ENVIRONMENT")
+        or os.getenv("VERCEL")
+        or os.getenv("FLY_APP_NAME")
+    )
+
+
+def _get_transcript_cloud(video_id: str) -> dict:
+    if not os.getenv("GEMINI_API_KEY", "").strip():
+        raise ValueError(
+            "GEMINI_API_KEY is missing on Render. "
+            "Dashboard → your service → Environment → add key from "
+            "https://aistudio.google.com/app/apikey → Save → Redeploy."
+        )
+    return _get_transcript_via_gemini(video_id)
+
+
 def get_transcript(video_id: str) -> dict:
     """
     Fetch transcript for a YouTube video.
-    Local: YouTube API (fast). Cloud: Gemini or Invidious when YouTube blocks the IP.
+    Local: YouTube API (fast). Cloud (Render): Gemini reads the YouTube URL.
     """
-    api = _create_youtube_api()
-    youtube_error = ""
+    if _is_cloud_host():
+        return _get_transcript_cloud(video_id)
 
+    api = _create_youtube_api()
     try:
         return _get_transcript_youtube(api, video_id)
     except ValueError as e:
-        youtube_error = str(e)
-        if not _is_ip_block_error(youtube_error):
+        if not _is_ip_block_error(str(e)):
             raise
     except Exception as e:
-        youtube_error = str(e)
-        if not _is_ip_block_error(youtube_error):
-            raise ValueError(f"Failed to fetch transcript: {youtube_error}") from e
+        if not _is_ip_block_error(str(e)):
+            raise ValueError(f"Failed to fetch transcript: {e}") from e
 
     if os.getenv("GEMINI_API_KEY", "").strip():
-        try:
-            return _get_transcript_via_gemini(video_id)
-        except ValueError:
-            pass
-        except Exception:
-            pass
-
-    try:
-        segments = _fetch_via_invidious(video_id)
-        return _segments_to_result(video_id, segments)
-    except Exception:
-        pass
+        return _get_transcript_via_gemini(video_id)
 
     raise ValueError(
-        "YouTube blocked captions from this server (normal on Render). "
-        "Refresh and try again — the site fetches captions in your browser first. "
-        "Ensure GEMINI_API_KEY is set on Render for backup, and the video has captions."
+        "YouTube blocked this IP and GEMINI_API_KEY is not set in .env."
     )

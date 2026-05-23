@@ -58,7 +58,12 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "gemini_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),
+        "cloud_host": bool(os.getenv("RENDER") or os.getenv("RAILWAY_ENVIRONMENT")),
+        "transcript_mode": "gemini" if os.getenv("RENDER") else "youtube",
+    }
 
 
 @app.post("/api/process")

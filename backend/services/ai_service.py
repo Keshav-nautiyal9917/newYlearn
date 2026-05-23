@@ -114,13 +114,18 @@ def transcribe_youtube_video(video_id: str) -> str:
         except Exception as e:
             err_str = str(e)
             last_err = e
+            if "403" in err_str or "leaked" in err_str.lower() or "API key" in err_str:
+                raise ValueError(
+                    "Invalid Gemini API key. Create a NEW key at "
+                    "https://aistudio.google.com/app/apikey and set GEMINI_API_KEY on Render."
+                ) from e
             if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower():
                 time.sleep(2)
                 continue
             continue
     raise ValueError(
-        "Gemini could not read this video. Check GEMINI_API_KEY and quota, "
-        "or use a shorter public video with captions. "
+        "Gemini could not read this video (quota or video too long). "
+        "Try a shorter public video with captions. "
         f"Details: {last_err}"
     )
 
