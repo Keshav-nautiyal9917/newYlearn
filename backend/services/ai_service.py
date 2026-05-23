@@ -13,8 +13,13 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 _MODEL_PREFERENCE = [
     "gemini-2.5-flash",
     "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
     "gemini-flash-latest",
+]
+
+# YouTube video transcription (Render) — models that support file_uri + YouTube URLs
+_TRANSCRIPT_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
 ]
 
 _model_cache: dict = {}
@@ -94,7 +99,7 @@ def transcribe_youtube_video(video_id: str) -> str:
         "No timestamps, bullet points, titles, or commentary."
     )
     last_err = None
-    for model_name in _MODEL_PREFERENCE:
+    for model_name in _TRANSCRIPT_MODELS:
         try:
             model = _get_model(model_name)
             response = model.generate_content(
@@ -114,18 +119,23 @@ def transcribe_youtube_video(video_id: str) -> str:
         except Exception as e:
             err_str = str(e)
             last_err = e
-            if "403" in err_str or "leaked" in err_str.lower() or "API key" in err_str:
+            if "leaked" in err_str.lower():
                 raise ValueError(
-                    "Invalid Gemini API key. Create a NEW key at "
-                    "https://aistudio.google.com/app/apikey and set GEMINI_API_KEY on Render."
+                    "This Gemini key was blocked (leaked). Create a NEW key at "
+                    "https://aistudio.google.com/app/apikey and update GEMINI_API_KEY on Render."
+                ) from e
+            if "403" in err_str and ("API key" in err_str or "PERMISSION_DENIED" in err_str):
+                raise ValueError(
+                    "Render has the wrong GEMINI_API_KEY (Google rejected it). "
+                    "Render Dashboard → Environment → paste your key from AI Studio → Save → Redeploy."
                 ) from e
             if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower():
-                time.sleep(2)
+                time.sleep(3)
                 continue
             continue
     raise ValueError(
         "Gemini could not read this video (quota or video too long). "
-        "Try a shorter public video with captions. "
+        "Wait 1 minute and try a shorter public video. "
         f"Details: {last_err}"
     )
 
